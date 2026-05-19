@@ -1,0 +1,33 @@
+{
+    "manifest_version": 3,
+    "name": "AlgoGuru",
+    "version": "1.0",
+    "description": "AlgoGuru is a competitive programming assistant that provides hints for problems on Codeforces & CSES.",
+    "permissions": [
+        "storage",
+        "activeTab"
+    ],
+    "host_permissions": [
+        "https://codeforces.com/*",
+        "https://cses.fi/*",
+        "http://localhost:3000/*"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "https://codeforces.com/contest/*/problem/*",
+                "https://codeforces.com/problemset/problem/*",
+                "https://cses.fi/problemset/task/*"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "css": [
+                "styles/content.css"
+            ]
+        }
+    ]
+}
