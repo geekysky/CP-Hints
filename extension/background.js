@@ -50,56 +50,54 @@ async function isContestLive(contestID) {
         console.log("Codeforces API erro:", error);
         return false;
     }
+}
 
-    // listen for messages from content.js 
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-        if (request.action === "fetchHints") {
-            (async () => {
-                const problem = request.problemData;
+// listen for messages from content.js 
+// inside background.js - message listener
 
-                // check contest staus first
-                if (problem.platform === "Codeforces" && problem.contestID) {
-                    const live = await isContestLive(problem.contestID);
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "fetchHints") {
+        (async () => {
+            const problem = request.problemData;
 
-                    if (live) {
-                        // block the request as contest is live
-                        sendResponse({ success: false, error: "Contest is currently LIVE!" });
-                        return;
-                    }
-                }
-
-                // get the user's UUID 
-                const storage = await chrome.storage.local.get(['uuid']);
-                const userUUID = storage.uuid;
-
-                if (!userUUID) {
-                    sendResponse({ success: false, error: "User is not registered. Please login first." });
+            // --- 1. CODEFORCES GATEKEEPER (API-Based) ---
+            if (problem.platform === "Codeforces" && problem.contestID) {
+                const live = await isContestLive(problem.contestID);
+                if (live) {
+                    sendResponse({ success: false, error: "Hints are disabled during live Codeforces contests!" });
                     return;
                 }
+            }
 
-                // now make the actual request
-                try {
-                    const response = await fetch("http://localhost:3000/api/hints", {
-                        method: "POST",
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Extension-ID': userUUID
-                        },
-                        body: JSON.stringify(problem)
-                    });
+            // --- 2. LEETCODE GATEKEEPER (URL & DOM-Based) ---
+            if (problem.platform === "LeetCode" && problem.isContest) {
+                sendResponse({
+                    success: false,
+                    error: "Hints are disabled during live LeetCode Contests !"
+                });
+                return;
+            }
 
-                    const resdata = await response.json();
-                    sendResponse(resdata);
+            // --- 3. PROCEED TO NODE.JS SERVER IF SAFE ---
+            const storage = await chrome.storage.local.get(['uuid']);
+            const userUUID = storage.uuid;
 
-                } catch (error) {
-                    console.log("Backend fetch error:", error);
-                    sendResponse({ success: false, error: "Failed to fetch hints. Please try again" })
-                }
+            try {
+                const response = await fetch("http://localhost:3000/api/hints", {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Extension-ID': userUUID
+                    },
+                    body: JSON.stringify(problem)
+                });
 
-            })();
-
-            return true;
-        }
-    });
-
-}
+                const resdata = await response.json();
+                sendResponse(resdata);
+            } catch (error) {
+                sendResponse({ success: false, error: "Failed to fetch hints. Please try again." });
+            }
+        })();
+        return true;
+    }
+});
