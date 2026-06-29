@@ -78,12 +78,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 return;
             }
 
-            // --- 3. PROCEED TO NODE.JS SERVER IF SAFE ---
+            // call node js API
             const storage = await chrome.storage.local.get(['uuid']);
             const userUUID = storage.uuid;
 
             try {
-                const response = await fetch("http://localhost:3000/api/hints", {
+                const response = await fetch("http://localhost:8000/api/hints", {
                     method: "POST",
                     headers: {
                         'Content-Type': 'application/json',

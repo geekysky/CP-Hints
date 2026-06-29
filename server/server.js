@@ -4,7 +4,8 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
-import Math from 'math';
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const app = express();
 
 // Middleware
@@ -17,7 +18,7 @@ mongoose.connect(process.env.MONGODB_URI)
     .catch(err => console.error('MongoDB Connection Error:', err));
 
 
-// --- 2. THE DATABASE SCHEMA ---
+// DB schema...
 // We need to define how a User looks in our database for the Token Bucket.
 const userSchema = new Schema(
     {
@@ -109,9 +110,57 @@ async function tokenBucketLimiter(req, res, next) {
 }
 
 
-// --- 3. THE ROUTES ---
-// We will build the /api/hints route here shortly.
-// ...
+// Route
+app.post('/api/hints', tokenBucketLimiter, async (req, res) => {
+    const { platform, title, body } = req.body;
+
+    if (!title || !body) {
+        return res.status(400).json(
+            {
+                success: false,
+                error: "Missing problem data from extension!"
+            }
+        );
+    }
+
+    try {
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+        // system prompt 
+        const prompt = `You are an elite competitive programming coach. Your goal is to guide the user using First Principles Thinking.
+        Do NOT provide the final code or the exact solution. 
+        
+        Analyze the problem and provide EXACTLY 5 progressive hints:
+        1. High-level intuition.
+        2. Identifying the core constraints / bottlenecks.
+        3. Mathematical or logical deductions.
+        4. Choosing the right data structure/algorithm.
+        5. Pseudocode structure.
+
+        Format the output strictly as a bulleted list using an asterisk (*) for each hint, separated by newlines. 
+        Do not include introductory or concluding conversational text.
+
+        Problem Platform: ${platform}
+        Problem Title: ${title}
+        Problem Description: ${body}
+        `;
+
+        const result = await model.generateContent(prompt);
+        const responseText = result.response.text();
+
+        return res.status(200).json({
+            success: true,
+            data: responseText
+        });
+
+    } catch (error) {
+        console.log("Error generating hints: ", error);
+        return res.status(500).json({
+            success: false,
+            error: "Failed to generate hints",
+        });
+    }
+});
 
 
 // Start the Server
