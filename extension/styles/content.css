@@ -80,24 +80,30 @@
 .cp-accordion-item {
     margin-bottom: 8px;
     border: 1px solid #e5e7eb;
-    border-radius: 6px;
+    border-radius: 8px;
     overflow: hidden;
+    transition: border-color 0.2s;
+}
+
+.cp-accordion-item:has(.cp-accordion-header.active) {
+    border-color: #93c5fd;
 }
 
 .cp-accordion-header {
     width: 100%;
     background: #ffffff;
     border: none;
-    padding: 14px 16px;
+    padding: 12px 16px;
     text-align: left;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 13px;
     color: #334155;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
     transition: background 0.2s;
+    gap: 8px;
 }
 
 .cp-accordion-header:hover {
@@ -106,22 +112,87 @@
 
 .cp-accordion-header.active {
     background: #eff6ff;
+    color: #1d4ed8;
+    border-left: 3px solid #2563eb;
+}
+
+/* Two-line header: "Hint N" + label */
+.cp-header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.cp-hint-num {
+    font-weight: 700;
+    font-size: 13px;
+    color: inherit;
+}
+
+.cp-hint-label {
+    font-weight: 400;
+    font-size: 11px;
+    color: #94a3b8;
+    letter-spacing: 0.02em;
+}
+
+.cp-accordion-header.active .cp-hint-label {
+    color: #60a5fa;
+}
+
+.cp-icon {
+    font-size: 18px;
+    line-height: 1;
+    flex-shrink: 0;
+    color: #94a3b8;
+    transition: transform 0.2s;
+}
+
+.cp-accordion-header.active .cp-icon {
     color: #2563eb;
 }
 
 .cp-accordion-content {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.3s ease-out;
-    background: #ffffff;
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #fafbff;
+    border-top: 0px solid transparent;
 }
 
-.cp-accordion-content p {
-    padding: 0 16px 16px 16px;
+.cp-accordion-header.active + .cp-accordion-content {
+    border-top: 1px solid #dbeafe;
+}
+
+/* Hint body text */
+.cp-hint-body {
+    padding: 14px 16px 16px 16px;
     margin: 0;
-    font-size: 14px;
-    line-height: 1.6;
-    color: #475569;
+    font-size: 13.5px;
+    line-height: 1.75;
+    color: #374151;
+}
+
+/* Inline code styling — essential for CP variable/formula names */
+.cp-hint-body code {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 12px;
+    color: #c026d3;
+    white-space: nowrap;
+}
+
+.cp-hint-body strong {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.cp-hint-body em {
+    color: #4b5563;
+    font-style: italic;
 }
 
 /* Loader & Errors */

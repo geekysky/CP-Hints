@@ -3,6 +3,21 @@
     "name": "AlgoGuru",
     "version": "1.0",
     "description": "AlgoGuru is a competitive programming assistant that provides hints for problems on Codeforces & CSES.",
+    "icons": {
+        "16":  "assets/AG_logo.png",
+        "32":  "assets/AG_logo.png",
+        "48":  "assets/AG_logo.png",
+        "128": "assets/AG_logo.png"
+    },
+    "action": {
+        "default_icon": {
+            "16":  "assets/AG_logo.png",
+            "32":  "assets/AG_logo.png",
+            "48":  "assets/AG_logo.png",
+            "128": "assets/AG_logo.png"
+        },
+        "default_title": "AlgoGuru — Hints for CP"
+    },
     "permissions": [
         "storage",
         "activeTab"
@@ -30,4 +45,4 @@
             ]
         }
     ]
-}
+}

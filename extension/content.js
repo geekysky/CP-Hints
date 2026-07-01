@@ -115,14 +115,38 @@ function injectUI(problemData) {
 }
 
 // 4. The Accordion Builder Logic
+const HINT_LABELS = [
+    { label: "Intuition", emoji: "💡" },
+    { label: "Constraints", emoji: "🔍" },
+    { label: "Key Deduction", emoji: "🧮" },
+    { label: "Algorithm", emoji: "⚙️" },
+    { label: "Pseudocode", emoji: "📝" },
+];
+
+function parseMarkdown(text) {
+    return text
+        // Safety net: LaTeX $...$ math → inline code (in case model ignores instructions)
+        .replace(/\$([^$\n]+)\$/g, '<code>$1</code>')
+        // Inline code: `code`
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        // Bold: **text**
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        // NOTE: No _italic_ rule — underscores in variable names (a_i, a_{N-1}) would break
+        // Line breaks within a hint
+        .replace(/\n/g, '<br>');
+}
+
 function renderAccordions(rawText, container) {
-    // Assuming the AI returns hints separated by newlines and bullet points (*)
+    // Split on newline + bullet marker (*)
     const hintsArray = rawText.split(/\n\s*\*\s*/).filter(h => h.trim() !== '');
 
     hintsArray.forEach((hintText, index) => {
-        // Clean up the string and bold any Markdown
+        // Strip any leading "Hint N:" prefix the AI may have added
         let cleanText = hintText.replace(/^Hint\s*\d*[:\-]\s*/i, '').trim();
-        cleanText = cleanText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        // Parse markdown into HTML
+        const renderedText = parseMarkdown(cleanText);
+
+        const meta = HINT_LABELS[index] || { label: `Hint ${index + 1}`, emoji: "🔎" };
 
         // Create Accordion Item
         const item = document.createElement("div");
@@ -131,24 +155,29 @@ function renderAccordions(rawText, container) {
         // Create Header (The clickable dropdown)
         const header = document.createElement("button");
         header.className = "cp-accordion-header";
-        header.innerHTML = `Hint ${index + 1} <span class="cp-icon">+</span>`;
+        header.innerHTML = `
+            <span class="cp-header-left">
+                <span class="cp-hint-num">Hint ${index + 1}</span>
+                <span class="cp-hint-label">${meta.emoji} ${meta.label}</span>
+            </span>
+            <span class="cp-icon">+</span>
+        `;
 
         // Create Body (The retracted content)
         const content = document.createElement("div");
         content.className = "cp-accordion-content";
-        content.innerHTML = `<p>${cleanText}</p>`;
+        content.innerHTML = `<div class="cp-hint-body">${renderedText}</div>`;
 
         // The Click Logic for retracting/expanding
         header.onclick = () => {
             const isOpen = content.style.maxHeight;
 
-            // Close all other accordions (optional, but keeps UI clean)
+            // Close all other accordions
             document.querySelectorAll('.cp-accordion-content').forEach(c => c.style.maxHeight = null);
             document.querySelectorAll('.cp-icon').forEach(icon => icon.innerText = "+");
             document.querySelectorAll('.cp-accordion-header').forEach(h => h.classList.remove('active'));
 
             if (!isOpen) {
-                // Open this one
                 content.style.maxHeight = content.scrollHeight + "px";
                 header.querySelector('.cp-icon').innerText = "−";
                 header.classList.add('active');
