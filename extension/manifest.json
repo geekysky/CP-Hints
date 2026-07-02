@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "AlgoGuru",
-    "version": "1.0",
+    "version": "1.0.0",
     "description": "AlgoGuru is a competitive programming assistant that provides hints for problems on Codeforces & CSES.",
     "icons": {
         "16":  "assets/AG_logo.png",
@@ -24,8 +24,7 @@
     ],
     "host_permissions": [
         "https://codeforces.com/*",
-        "https://cses.fi/*",
-        "http://localhost:3000/*"
+        "https://cses.fi/*"
     ],
     "background": {
         "service_worker": "background.js"

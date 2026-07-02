@@ -4,8 +4,6 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const app = express();
 
 // Middleware
@@ -138,14 +136,33 @@ function isOverloadError(error) {
 
 // Tries a single model with exponential backoff retries
 async function tryModelWithRetry(modelName, prompt) {
-    const model = genAI.getGenerativeModel({ model: modelName });
     let lastError;
 
     for (let attempt = 1; attempt <= MAX_RETRIES_PER_MODEL; attempt++) {
         try {
             console.log(`[Gemini] Trying model: ${modelName} (attempt ${attempt}/${MAX_RETRIES_PER_MODEL})`);
-            const result = await model.generateContent(prompt);
-            return result.response.text();
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }]
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                const err = new Error(data?.error?.message || `HTTP ${res.status}`);
+                err.status = res.status;
+                err.reason = data?.error?.details?.[0]?.reason;
+                throw err;
+            }
+
+            return data.candidates[0].content.parts[0].text;
+
         } catch (error) {
             lastError = error;
             if (isOverloadError(error) && attempt < MAX_RETRIES_PER_MODEL) {

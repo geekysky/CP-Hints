@@ -83,7 +83,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             const userUUID = storage.uuid;
 
             try {
-                const response = await fetch("http://localhost:8000/api/hints", {
+                const response = await fetch("http://15.207.110.112:8000/api/hints", {
                     method: "POST",
                     headers: {
                         'Content-Type': 'application/json',
